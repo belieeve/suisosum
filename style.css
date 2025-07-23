@@ -457,3 +457,109 @@ pre code {
     border: 1px solid #c3e6cb;
     margin: 10px 0;
 }
+
+/* キーワード抽出セクション */
+.keyword-summary {
+    margin-bottom: 20px;
+}
+
+.keyword-summary h4 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.keyword-count {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 8px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.keyword-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.keyword-value {
+    background: #007bff;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.keyword-extracted {
+    margin-top: 20px;
+}
+
+.keyword-extracted h4 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.keyword-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 10px;
+}
+
+.keyword-table th,
+.keyword-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.keyword-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+}
+
+.keyword-table tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+.keyword-table tr:hover {
+    background: #e9ecef;
+}
+
+.found-keywords {
+    background: #28a745;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.data-preview {
+    max-width: 300px;
+    word-wrap: break-word;
+    color: #6c757d;
+}
+
+@media (max-width: 768px) {
+    .keyword-table {
+        font-size: 11px;
+    }
+    
+    .keyword-table th,
+    .keyword-table td {
+        padding: 4px;
+    }
+    
+    .data-preview {
+        max-width: 150px;
+    }
+}
