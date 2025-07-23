@@ -35,13 +35,16 @@ class DataOrganizer {
     {"名前": "鈴木一郎", "年齢": 35, "職業": "エンジニア", "住所": "神奈川県", "給与": 520000},
     {"名前": "高橋美咲", "年齢": 27, "職業": "デザイナー", "住所": "東京都", "給与": 400000}
 ]`,
-            text: `田中太郎 25歳 エンジニア 東京都 B1定期
-佐藤花子 30歳 デザイナー 大阪府 KO定期
-山田次郎 28歳 営業 東京都 P1定期
-鈴木一郎 35歳 エンジニア 神奈川県 B1定期
-高橋美咲 27歳 デザイナー 東京都 P定期
-山下健一 32歳 開発者 埼玉県 KO定期
-中村美香 29歳 マーケター 千葉県 B1定期`
+            text: `田中太郎 25歳 エンジニア 東京都 P1定期A台
+佐藤花子 30歳 デザイナー 大阪府 KOP1定期B台
+山田次郎 28歳 営業 東京都 JOP定期A台
+鈴木一郎 35歳 エンジニア 神奈川県 P1定期B台
+高橋美咲 27歳 デザイナー 東京都 KOP1定期A台
+山下健一 32歳 開発者 埼玉県 JOP定期B台
+中村美香 29歳 マーケター 千葉県 P1定期A台
+伊藤直樹 31歳 営業 神奈川県 KOP1定期B台
+加藤さくら 26歳 企画 大阪府 JOP定期A台
+渡辺健 33歳 開発 東京都 P1定期`
         };
         
         document.getElementById('dataInput').value = sampleData[format];
@@ -265,54 +268,75 @@ class DataOrganizer {
 
     extractKeywords() {
         this.keywordAnalysis = {
-            keywords: ['B1', 'KO', 'P', 'P1'],
-            counts: {},
-            matches: {},
-            total: 0
+            keywords: ['P1', 'KOP1', 'JOP'],
+            detailedCounts: {},
+            totalCounts: {},
+            extractedData: []
         };
         
         if (!Array.isArray(this.rawData) || this.rawData.length === 0) return;
         
-        const allText = this.rawData.map(row => 
-            Object.values(row).join(' ')
-        ).join(' ');
-        
+        // 各キーワードの詳細集計を初期化
         this.keywordAnalysis.keywords.forEach(keyword => {
-            const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
-            const matches = allText.match(regex) || [];
-            const count = matches.length;
-            
-            this.keywordAnalysis.counts[keyword] = count;
-            this.keywordAnalysis.matches[keyword] = matches;
-            this.keywordAnalysis.total += count;
+            this.keywordAnalysis.detailedCounts[keyword] = {
+                'A台': 0,
+                'B台': 0,
+                'その他': 0,
+                total: 0
+            };
+            this.keywordAnalysis.totalCounts[keyword] = 0;
         });
         
-        this.keywordAnalysis.extractedData = this.extractKeywordData();
+        this.keywordAnalysis.extractedData = this.extractDetailedKeywordData();
+        
+        // 総計を計算
+        this.keywordAnalysis.grandTotal = Object.values(this.keywordAnalysis.totalCounts)
+            .reduce((sum, count) => sum + count, 0);
     }
 
-    extractKeywordData() {
+    extractDetailedKeywordData() {
         const extractedData = [];
         
         if (!Array.isArray(this.rawData) || this.rawData.length === 0) return extractedData;
         
         this.rawData.forEach((row, index) => {
             const rowText = Object.values(row).join(' ');
-            const foundKeywords = [];
+            const foundMatches = [];
             
             this.keywordAnalysis.keywords.forEach(keyword => {
-                const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
-                const matches = rowText.match(regex);
-                if (matches) {
-                    foundKeywords.push(...matches);
+                // キーワード + 定期 のパターンを検索
+                const keywordRegex = new RegExp(`${keyword}定期`, 'gi');
+                const keywordMatches = rowText.match(keywordRegex);
+                
+                if (keywordMatches) {
+                    keywordMatches.forEach(match => {
+                        // A台またはB台を検索
+                        let category = 'その他';
+                        if (rowText.includes('A台') || rowText.includes('A定期')) {
+                            category = 'A台';
+                        } else if (rowText.includes('B台') || rowText.includes('B定期')) {
+                            category = 'B台';
+                        }
+                        
+                        // カウントを更新
+                        this.keywordAnalysis.detailedCounts[keyword][category]++;
+                        this.keywordAnalysis.detailedCounts[keyword].total++;
+                        this.keywordAnalysis.totalCounts[keyword]++;
+                        
+                        foundMatches.push({
+                            keyword: keyword,
+                            category: category,
+                            fullMatch: match
+                        });
+                    });
                 }
             });
             
-            if (foundKeywords.length > 0) {
+            if (foundMatches.length > 0) {
                 extractedData.push({
                     rowIndex: index + 1,
                     originalData: row,
-                    foundKeywords: foundKeywords,
-                    keywordCount: foundKeywords.length
+                    foundMatches: foundMatches
                 });
             }
         });
@@ -446,41 +470,55 @@ class DataOrganizer {
     displayKeywords() {
         const container = document.getElementById('keywordResult');
         
-        if (!this.keywordAnalysis || this.keywordAnalysis.total === 0) {
-            container.innerHTML = '<p class="no-data">B1、KO、P、P1のキーワードが見つかりませんでした</p>';
+        if (!this.keywordAnalysis || this.keywordAnalysis.grandTotal === 0) {
+            container.innerHTML = '<p class="no-data">P1、KOP1、JOPのキーワードが見つかりませんでした</p>';
             return;
         }
         
         let html = '<div class="keyword-summary">';
-        html += `<h4>キーワード集計 (合計: ${this.keywordAnalysis.total}個)</h4>`;
+        html += `<h4>キーワード詳細集計 (総合計: ${this.keywordAnalysis.grandTotal}個)</h4>`;
+        
+        // 詳細集計表を作成
+        html += '<div class="detailed-count-table">';
+        html += '<table class="count-table">';
+        html += '<thead><tr><th>キーワード</th><th>A台</th><th>B台</th><th>その他</th><th>合計</th></tr></thead>';
+        html += '<tbody>';
         
         this.keywordAnalysis.keywords.forEach(keyword => {
-            const count = this.keywordAnalysis.counts[keyword] || 0;
-            if (count > 0) {
-                html += `<div class="keyword-count">
-                    <span class="keyword-label">${keyword}:</span>
-                    <span class="keyword-value">${count}個</span>
-                </div>`;
+            const counts = this.keywordAnalysis.detailedCounts[keyword];
+            if (counts.total > 0) {
+                html += `<tr>
+                    <td class="keyword-name">${keyword}定期</td>
+                    <td class="count-cell">${counts['A台']}台</td>
+                    <td class="count-cell">${counts['B台']}台</td>
+                    <td class="count-cell">${counts['その他']}台</td>
+                    <td class="total-cell">${counts.total}台</td>
+                </tr>`;
             }
         });
         
+        html += '</tbody></table>';
+        html += '</div>';
         html += '</div>';
         
         if (this.keywordAnalysis.extractedData.length > 0) {
             html += '<div class="keyword-extracted">';
-            html += '<h4>キーワード含有データ</h4>';
+            html += '<h4>検出されたデータ詳細</h4>';
             html += '<div class="extracted-table">';
             html += '<table class="keyword-table">';
-            html += '<thead><tr><th>行番号</th><th>見つかったキーワード</th><th>データ内容</th></tr></thead>';
+            html += '<thead><tr><th>行番号</th><th>キーワード</th><th>区分</th><th>データ内容</th></tr></thead>';
             html += '<tbody>';
             
             this.keywordAnalysis.extractedData.forEach(item => {
-                const dataPreview = Object.values(item.originalData).join(' | ').substring(0, 100);
-                html += `<tr>
-                    <td>${item.rowIndex}</td>
-                    <td><span class="found-keywords">${item.foundKeywords.join(', ')}</span></td>
-                    <td class="data-preview">${dataPreview}${dataPreview.length >= 100 ? '...' : ''}</td>
-                </tr>`;
+                const dataPreview = Object.values(item.originalData).join(' | ').substring(0, 80);
+                item.foundMatches.forEach(match => {
+                    html += `<tr>
+                        <td>${item.rowIndex}</td>
+                        <td><span class="found-keywords">${match.keyword}定期</span></td>
+                        <td><span class="category-badge ${match.category}">${match.category}</span></td>
+                        <td class="data-preview">${dataPreview}${dataPreview.length >= 80 ? '...' : ''}</td>
+                    </tr>`;
+                });
             });
             
             html += '</tbody></table>';
