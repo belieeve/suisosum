@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>データ整理ツール</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 データ整理ツール</h1>
+            <p>入力されたデータを定数やジャンル名でわかりやすく整理します</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <h2>データ入力</h2>
+                <div class="input-controls">
+                    <label for="dataFormat">データ形式:</label>
+                    <select id="dataFormat">
+                        <option value="csv">CSV</option>
+                        <option value="json">JSON</option>
+                        <option value="text">テキスト（行区切り）</option>
+                    </select>
+                    <button id="sampleBtn">サンプルデータを読み込み</button>
+                </div>
+                <textarea id="dataInput" placeholder="ここにデータを貼り付けてください...&#10;&#10;例 (CSV):&#10;名前,年齢,職業,住所&#10;田中太郎,25,エンジニア,東京都&#10;佐藤花子,30,デザイナー,大阪府&#10;山田次郎,28,営業,東京都"></textarea>
+                <button id="analyzeBtn">データを分析</button>
+            </section>
+
+            <section class="results-section" style="display: none;">
+                <div class="results-grid">
+                    <div class="result-panel">
+                        <h3>🔢 定数一覧</h3>
+                        <div id="constantsResult"></div>
+                    </div>
+
+                    <div class="result-panel">
+                        <h3>🏷️ ジャンル分類</h3>
+                        <div id="genresResult"></div>
+                    </div>
+
+                    <div class="result-panel">
+                        <h3>📋 データ型分析</h3>
+                        <div id="typesResult"></div>
+                    </div>
+
+                    <div class="result-panel">
+                        <h3>📊 統計情報</h3>
+                        <div id="statsResult"></div>
+                    </div>
+                </div>
+
+                <div class="organized-data">
+                    <h3>✨ 整理済みデータ</h3>
+                    <div class="output-controls">
+                        <label for="outputFormat">出力形式:</label>
+                        <select id="outputFormat">
+                            <option value="table">テーブル</option>
+                            <option value="json">JSON</option>
+                            <option value="csv">CSV</option>
+                            <option value="code">JavaScript定数</option>
+                        </select>
+                        <button id="copyBtn">コピー</button>
+                        <button id="downloadBtn">ダウンロード</button>
+                    </div>
+                    <div id="organizedResult"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
