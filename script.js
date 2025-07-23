@@ -292,6 +292,9 @@ class DataOrganizer {
         // 総計を計算
         this.keywordAnalysis.grandTotal = Object.values(this.keywordAnalysis.totalCounts)
             .reduce((sum, count) => sum + count, 0);
+        
+        // デバッグ用出力
+        console.log('キーワード分析結果:', this.keywordAnalysis);
     }
 
     extractDetailedKeywordData() {
@@ -303,31 +306,65 @@ class DataOrganizer {
             const rowText = Object.values(row).join(' ');
             const foundMatches = [];
             
+            // デバッグ用出力
+            console.log(`行${index + 1}: "${rowText}"`);
+            
             this.keywordAnalysis.keywords.forEach(keyword => {
-                // キーワード + 定期 のパターンを検索
-                const keywordRegex = new RegExp(`${keyword}定期`, 'gi');
-                const keywordMatches = rowText.match(keywordRegex);
+                // より厳密なキーワードパターンを検索
+                const patterns = [
+                    new RegExp(`${keyword}定期A台`, 'gi'),
+                    new RegExp(`${keyword}定期B台`, 'gi'),
+                    new RegExp(`${keyword}定期`, 'gi')
+                ];
                 
-                if (keywordMatches) {
-                    keywordMatches.forEach(match => {
-                        // A台またはB台を検索
-                        let category = 'その他';
-                        if (rowText.includes('A台') || rowText.includes('A定期')) {
-                            category = 'A台';
-                        } else if (rowText.includes('B台') || rowText.includes('B定期')) {
-                            category = 'B台';
-                        }
-                        
-                        // カウントを更新
-                        this.keywordAnalysis.detailedCounts[keyword][category]++;
+                // A台パターンをチェック
+                const aMatches = rowText.match(patterns[0]);
+                if (aMatches) {
+                    aMatches.forEach(match => {
+                        this.keywordAnalysis.detailedCounts[keyword]['A台']++;
                         this.keywordAnalysis.detailedCounts[keyword].total++;
                         this.keywordAnalysis.totalCounts[keyword]++;
                         
                         foundMatches.push({
                             keyword: keyword,
-                            category: category,
+                            category: 'A台',
                             fullMatch: match
                         });
+                    });
+                }
+                
+                // B台パターンをチェック
+                const bMatches = rowText.match(patterns[1]);
+                if (bMatches) {
+                    bMatches.forEach(match => {
+                        this.keywordAnalysis.detailedCounts[keyword]['B台']++;
+                        this.keywordAnalysis.detailedCounts[keyword].total++;
+                        this.keywordAnalysis.totalCounts[keyword]++;
+                        
+                        foundMatches.push({
+                            keyword: keyword,
+                            category: 'B台',
+                            fullMatch: match
+                        });
+                    });
+                }
+                
+                // その他（A台・B台指定なし）をチェック
+                const otherMatches = rowText.match(patterns[2]);
+                if (otherMatches) {
+                    // A台・B台を含まないマッチのみカウント
+                    otherMatches.forEach(match => {
+                        if (!match.includes('A台') && !match.includes('B台')) {
+                            this.keywordAnalysis.detailedCounts[keyword]['その他']++;
+                            this.keywordAnalysis.detailedCounts[keyword].total++;
+                            this.keywordAnalysis.totalCounts[keyword]++;
+                            
+                            foundMatches.push({
+                                keyword: keyword,
+                                category: 'その他',
+                                fullMatch: match
+                            });
+                        }
                     });
                 }
             });
