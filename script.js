@@ -35,16 +35,23 @@ class DataOrganizer {
     {"名前": "鈴木一郎", "年齢": 35, "職業": "エンジニア", "住所": "神奈川県", "給与": 520000},
     {"名前": "高橋美咲", "年齢": 27, "職業": "デザイナー", "住所": "東京都", "給与": 400000}
 ]`,
-            text: `田中太郎 25歳 エンジニア 東京都 P1定期A台
-佐藤花子 30歳 デザイナー 大阪府 KOP1定期B台
-山田次郎 28歳 営業 東京都 JOP定期A台
-鈴木一郎 35歳 エンジニア 神奈川県 P1定期B台
-高橋美咲 27歳 デザイナー 東京都 KOP1定期A台
-山下健一 32歳 開発者 埼玉県 JOP定期B台
-中村美香 29歳 マーケター 千葉県 P1定期A台
-伊藤直樹 31歳 営業 神奈川県 KOP1定期B台
-加藤さくら 26歳 企画 大阪府 JOP定期A台
-渡辺健 33歳 開発 東京都 P1定期`
+            text: `7/22 火 ルネサンス 武蔵小杉24 点検 G P1 4 毎週火曜
+7/22 火 FIT365 桶川マメトラショッピングパーク 定期B G kop1 1
+7/22 火 THE24GYM秋津 定期A G JOP 1 10~15/16~20
+7/22 火 エニタイムフィットネス飯能 定期A G kop1 1
+7/22 火 オレンジセオリーフィットネス東久留米 定期A G kop1 1 10~19
+7/23 水 ルネサンス 赤塚24 点検 G P1 3 毎週水曜
+7/23 水 ルネサンス 本駒込24 点検 G P1 2
+7/23 水 H'M関内 定期B G JOP-V1.5 1 水ノースタッフ 11~15/17~21
+7/24 木 ルネサンス 十条24 点検 G P1 1
+7/24 木 POWER HOUSE GYM Ibaraki 定期B G kop1 1
+7/24 木 ルネサンス 横須賀24 点検 G P1 3 毎週水曜9:30～22
+7/24 木 ルネサンス 金町駅前24 点検 G P1 3
+7/24 木 エニタイムフィットネスイオンタウン守谷 定期B G kop1 1
+7/24 木 ルネサンス 戸塚 点検 G P1 2 毎週水曜
+7/25 金 FIT365 イオン松ヶ崎 定期A G kop1 1
+7/25 金 エニタイムフィットネスみらい平 定期B G P1 1
+7/25 金 OASIS RAFEEL 港北 点検 G P1 3 毎週水曜`
         };
         
         document.getElementById('dataInput').value = sampleData[format];
@@ -281,6 +288,7 @@ class DataOrganizer {
             this.keywordAnalysis.detailedCounts[keyword] = {
                 'A台': 0,
                 'B台': 0,
+                '点検': 0,
                 'その他': 0,
                 total: 0
             };
@@ -310,61 +318,75 @@ class DataOrganizer {
             console.log(`行${index + 1}: "${rowText}"`);
             
             this.keywordAnalysis.keywords.forEach(keyword => {
-                // より厳密なキーワードパターンを検索
-                const patterns = [
-                    new RegExp(`${keyword}定期A台`, 'gi'),
-                    new RegExp(`${keyword}定期B台`, 'gi'),
-                    new RegExp(`${keyword}定期`, 'gi')
-                ];
+                // 実際のデータに合わせたパターンを定義
+                const patterns = {
+                    // 定期A G P1 4 のようなパターン
+                    'A台': new RegExp(`定期A\\s+G\\s+${keyword.toLowerCase()}\\s+\\d+`, 'gi'),
+                    // 定期B G kop1 1 のようなパターン  
+                    'B台': new RegExp(`定期B\\s+G\\s+${keyword.toLowerCase()}\\s+\\d+`, 'gi'),
+                    // 点検 G P1 3 のようなパターン
+                    '点検': new RegExp(`点検\\s+G\\s+${keyword.toLowerCase()}\\s+\\d+`, 'gi'),
+                    // JOP-V1.5 のような変種も考慮
+                    'variant': new RegExp(`(?:定期[AB]|点検)\\s+G\\s+${keyword.toLowerCase()}[\\w\\.-]*\\s+\\d+`, 'gi')
+                };
                 
                 // A台パターンをチェック
-                const aMatches = rowText.match(patterns[0]);
+                const aMatches = rowText.match(patterns['A台']);
                 if (aMatches) {
                     aMatches.forEach(match => {
-                        this.keywordAnalysis.detailedCounts[keyword]['A台']++;
-                        this.keywordAnalysis.detailedCounts[keyword].total++;
-                        this.keywordAnalysis.totalCounts[keyword]++;
+                        // 数量を抽出
+                        const quantity = parseInt(match.match(/\\d+$/)?.[0] || '1');
+                        
+                        this.keywordAnalysis.detailedCounts[keyword]['A台'] += quantity;
+                        this.keywordAnalysis.detailedCounts[keyword].total += quantity;
+                        this.keywordAnalysis.totalCounts[keyword] += quantity;
                         
                         foundMatches.push({
                             keyword: keyword,
                             category: 'A台',
-                            fullMatch: match
+                            fullMatch: match,
+                            quantity: quantity
                         });
                     });
                 }
                 
                 // B台パターンをチェック
-                const bMatches = rowText.match(patterns[1]);
+                const bMatches = rowText.match(patterns['B台']);
                 if (bMatches) {
                     bMatches.forEach(match => {
-                        this.keywordAnalysis.detailedCounts[keyword]['B台']++;
-                        this.keywordAnalysis.detailedCounts[keyword].total++;
-                        this.keywordAnalysis.totalCounts[keyword]++;
+                        // 数量を抽出
+                        const quantity = parseInt(match.match(/\\d+$/)?.[0] || '1');
+                        
+                        this.keywordAnalysis.detailedCounts[keyword]['B台'] += quantity;
+                        this.keywordAnalysis.detailedCounts[keyword].total += quantity;
+                        this.keywordAnalysis.totalCounts[keyword] += quantity;
                         
                         foundMatches.push({
                             keyword: keyword,
                             category: 'B台',
-                            fullMatch: match
+                            fullMatch: match,
+                            quantity: quantity
                         });
                     });
                 }
                 
-                // その他（A台・B台指定なし）をチェック
-                const otherMatches = rowText.match(patterns[2]);
-                if (otherMatches) {
-                    // A台・B台を含まないマッチのみカウント
-                    otherMatches.forEach(match => {
-                        if (!match.includes('A台') && !match.includes('B台')) {
-                            this.keywordAnalysis.detailedCounts[keyword]['その他']++;
-                            this.keywordAnalysis.detailedCounts[keyword].total++;
-                            this.keywordAnalysis.totalCounts[keyword]++;
-                            
-                            foundMatches.push({
-                                keyword: keyword,
-                                category: 'その他',
-                                fullMatch: match
-                            });
-                        }
+                // 点検パターンをチェック
+                const inspectionMatches = rowText.match(patterns['点検']);
+                if (inspectionMatches) {
+                    inspectionMatches.forEach(match => {
+                        // 数量を抽出
+                        const quantity = parseInt(match.match(/\\d+$/)?.[0] || '1');
+                        
+                        this.keywordAnalysis.detailedCounts[keyword]['点検'] += quantity;
+                        this.keywordAnalysis.detailedCounts[keyword].total += quantity;
+                        this.keywordAnalysis.totalCounts[keyword] += quantity;
+                        
+                        foundMatches.push({
+                            keyword: keyword,
+                            category: '点検',
+                            fullMatch: match,
+                            quantity: quantity
+                        });
                     });
                 }
             });
@@ -518,17 +540,18 @@ class DataOrganizer {
         // 詳細集計表を作成
         html += '<div class="detailed-count-table">';
         html += '<table class="count-table">';
-        html += '<thead><tr><th>キーワード</th><th>A台</th><th>B台</th><th>その他</th><th>合計</th></tr></thead>';
+        html += '<thead><tr><th>キーワード</th><th>定期A台</th><th>定期B台</th><th>点検</th><th>その他</th><th>合計</th></tr></thead>';
         html += '<tbody>';
         
         this.keywordAnalysis.keywords.forEach(keyword => {
             const counts = this.keywordAnalysis.detailedCounts[keyword];
             if (counts.total > 0) {
                 html += `<tr>
-                    <td class="keyword-name">${keyword}定期</td>
-                    <td class="count-cell">${counts['A台']}台</td>
-                    <td class="count-cell">${counts['B台']}台</td>
-                    <td class="count-cell">${counts['その他']}台</td>
+                    <td class="keyword-name">${keyword.toUpperCase()}</td>
+                    <td class="count-cell a-type">${counts['A台']}台</td>
+                    <td class="count-cell b-type">${counts['B台']}台</td>
+                    <td class="count-cell inspection-type">${counts['点検']}台</td>
+                    <td class="count-cell other-type">${counts['その他'] || 0}台</td>
                     <td class="total-cell">${counts.total}台</td>
                 </tr>`;
             }
@@ -543,17 +566,18 @@ class DataOrganizer {
             html += '<h4>検出されたデータ詳細</h4>';
             html += '<div class="extracted-table">';
             html += '<table class="keyword-table">';
-            html += '<thead><tr><th>行番号</th><th>キーワード</th><th>区分</th><th>データ内容</th></tr></thead>';
+            html += '<thead><tr><th>行番号</th><th>キーワード</th><th>区分</th><th>数量</th><th>データ内容</th></tr></thead>';
             html += '<tbody>';
             
             this.keywordAnalysis.extractedData.forEach(item => {
-                const dataPreview = Object.values(item.originalData).join(' | ').substring(0, 80);
+                const dataPreview = Object.values(item.originalData).join(' | ').substring(0, 60);
                 item.foundMatches.forEach(match => {
                     html += `<tr>
                         <td>${item.rowIndex}</td>
-                        <td><span class="found-keywords">${match.keyword}定期</span></td>
+                        <td><span class="found-keywords">${match.keyword.toUpperCase()}</span></td>
                         <td><span class="category-badge ${match.category}">${match.category}</span></td>
-                        <td class="data-preview">${dataPreview}${dataPreview.length >= 80 ? '...' : ''}</td>
+                        <td class="quantity-cell">${match.quantity}台</td>
+                        <td class="data-preview">${dataPreview}${dataPreview.length >= 60 ? '...' : ''}</td>
                     </tr>`;
                 });
             });
